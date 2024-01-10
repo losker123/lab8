@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Frontend App</title>
+</head>
+<body>
+  <h1>Data Display</h1>
+  <div id="dataDisplay"></div>
+  <button onclick="getData()">Get Data (GET)</button>
+  <button onclick="postGetData()">Post Get Data (POST)</button>
+  <button onclick="postData()">Post Add (POST)</button>
+  <button onclick="downloadFile('application/json')">Download JSON</button>
+  <button onclick="downloadFile('application/xml')">Download XML</button>
+  <button onclick="downloadFile('text/html')">Download HTML</button>
+  
+  <script>
+    async function getData() {
+      try {
+        const response = await fetch('/api/names');
+        const data = await response.json();
+        displayData(data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    async function postData() {
+      try {
+        const response = await fetch('/api/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: 'New Entry' })
+        });
+        await response.json();
+        getData();
+      } catch (error) {
+        console.error('Error adding data:', error);
+      }
+    }
+    async function downloadFile(format) {
+      try {
+        const response = await fetch('/api/parsedata', {
+          method: 'GET',
+          headers: {
+            'Accept': format
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Ошибка при загрузке файла');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        console.log(format);
+        if (format === 'text/html') {
+          link.download = 'data.html';
+        } else if (format === 'application/xml') {
+          link.download = 'data.xml';
+        } else {
+          link.download = 'data.json';
+        }
+
+        link.click();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Ошибка загрузки файла:', error);
+      }
+    }
+    async function postGetData() {
+      try {
+        const response = await fetch('/api/names/json', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        displayData(data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+    
+    function displayData(data) {
+      const dataDisplay = document.getElementById('dataDisplay');
+      console.log(data);
+      dataDisplay.innerHTML = '';
+      const ul = document.createElement('ul');
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.name;
+        ul.appendChild(li);
+      });
+      dataDisplay.appendChild(ul);
+    }
+   
+  </script>
+</body>
+</html>
